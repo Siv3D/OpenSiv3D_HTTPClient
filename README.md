@@ -1,4 +1,4 @@
-# OpenSiv3D HTTPClient
+﻿# OpenSiv3D HTTPClient
 HTTPClient class for OpenSiv3D v0.4.3 (experimental)
 https://github.com/Siv3D/OpenSiv3D/issues/482
 

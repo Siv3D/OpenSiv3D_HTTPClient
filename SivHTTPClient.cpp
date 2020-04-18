@@ -1,4 +1,4 @@
-
+ï»¿
 # include "HTTPClient.hpp"
 # define CURL_STATICLIB
 # include <curl/curl.h>
@@ -82,7 +82,7 @@ namespace s3d
 			}
 		}
 
-		// ƒwƒbƒ_‚Ì’Ç‰Á
+		// ãƒ˜ãƒƒãƒ€ã®è¿½åŠ 
 		{
 			::curl_slist* header_slist = nullptr;
 

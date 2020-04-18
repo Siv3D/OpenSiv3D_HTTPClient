@@ -1,10 +1,10 @@
-# pragma once
+ï»¿# pragma once
 # include <Siv3D.hpp>
 
 # if SIV3D_BUILD_TYPE(DEBUG)
-#	pragma comment (lib, "lib/libcurl-d")
+#	pragma comment (lib, "libcurl-d")
 # else 
-#	pragma comment (lib, "lib/libcurl")
+#	pragma comment (lib, "libcurl")
 # endif
 # pragma comment (lib, "crypt32")
 
@@ -15,56 +15,56 @@ namespace s3d
 	using HTTPHeader	= HashTable<String, String>;
 
 	/// <summary>
-	/// HTTP’ÊM‚ğs‚¤ƒNƒ‰ƒX
+	/// HTTPé€šä¿¡ã‚’è¡Œã†ã‚¯ãƒ©ã‚¹
 	/// </summary>
 	class HTTPClient
 	{
 	public:
 
 		/// <summary>
-		/// HTTPClient ‚ğg‚¤ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ÅAÅ‰‚É 1 ‰ñ‚¾‚¯ŒÄ‚Ño‚µ‚Ü‚·B([Siv3D ToDo]: ƒGƒ“ƒWƒ““à‚É‘g‚İ‚İ)
+		/// HTTPClient ã‚’ä½¿ã†ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã§ã€æœ€åˆã« 1 å›ã ã‘å‘¼ã³å‡ºã—ã¾ã™ã€‚([Siv3D ToDo]: ã‚¨ãƒ³ã‚¸ãƒ³å†…ã«çµ„ã¿è¾¼ã¿)
 		/// </summary>
 		static bool InitCURL();
 
 		/// <summary>
-		/// HTTPClient ‚ğg‚¤ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ÅAÅŒã‚É 1 ‰ñ‚¾‚¯ŒÄ‚Ño‚µ‚Ü‚·B([Siv3D ToDo]: ƒGƒ“ƒWƒ““à‚É‘g‚İ‚İ)
+		/// HTTPClient ã‚’ä½¿ã†ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã§ã€æœ€å¾Œã« 1 å›ã ã‘å‘¼ã³å‡ºã—ã¾ã™ã€‚([Siv3D ToDo]: ã‚¨ãƒ³ã‚¸ãƒ³å†…ã«çµ„ã¿è¾¼ã¿)
 		/// </summary>
 		static void CleanupCURL();
 
 		HTTPClient() = default;
 
 		/// <summary>
-		/// ƒtƒ@ƒCƒ‹‚ğƒ_ƒEƒ“ƒ[ƒh‚µ‚Ü‚·B
+		/// ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã¾ã™ã€‚
 		/// </summary>
 		/// <param name="url">
 		/// URL
 		/// </param>
 		/// <param name="saveFilePath">
-		/// æ“¾‚µ‚½ƒtƒ@ƒCƒ‹‚Ì•Û‘¶æ‚Ìƒtƒ@ƒCƒ‹ƒpƒX
+		/// å–å¾—ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜å…ˆã®ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹
 		/// </param>
 		bool downloadFile(URLView url, FilePathView saveFilePath);
 
 		// [Siv3D ToDo]
-		// (Ql: https://curl.haxx.se/libcurl/c/progressfunc.html)
+		// (å‚è€ƒ: https://curl.haxx.se/libcurl/c/progressfunc.html)
 		//bool downloadFileAsync(URLView url, FilePathView saveFilePath);
 
 		/// <summary>
-		/// HTTP-POSTƒŠƒNƒGƒXƒg‚ğ‘—‚è‚Ü‚·
+		/// HTTP-POSTãƒªã‚¯ã‚¨ã‚¹ãƒˆã‚’é€ã‚Šã¾ã™
 		/// </summary>
 		/// <param name="url">
 		/// URL
 		/// </param>
 		/// <param name="header">
-		/// ƒwƒbƒ_
+		/// ãƒ˜ãƒƒãƒ€
 		/// </param>
 		/// <param name="src">
-		/// ‘—M‚·‚éƒf[ƒ^‚Ìæ“ªƒ|ƒCƒ“ƒ^
+		/// é€ä¿¡ã™ã‚‹ãƒ‡ãƒ¼ã‚¿ã®å…ˆé ­ãƒã‚¤ãƒ³ã‚¿
 		/// </param>
 		/// <param name="size">
-		/// ‘—M‚·‚éƒf[ƒ^‚ÌƒTƒCƒYiƒoƒCƒgj
+		/// é€ä¿¡ã™ã‚‹ãƒ‡ãƒ¼ã‚¿ã®ã‚µã‚¤ã‚ºï¼ˆãƒã‚¤ãƒˆï¼‰
 		/// </param>
 		/// <param name="saveFilePath">
-		/// æ“¾‚µ‚½ƒtƒ@ƒCƒ‹‚Ì•Û‘¶æ‚Ìƒtƒ@ƒCƒ‹ƒpƒX
+		/// å–å¾—ã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜å…ˆã®ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹
 		/// </param>
 		bool post(URLView url, const HTTPHeader& header, const void* src, size_t size, FilePathView saveFilePath);
 	};
