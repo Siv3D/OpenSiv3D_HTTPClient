@@ -9,8 +9,8 @@ https://github.com/Siv3D/OpenSiv3D/issues/482
 ## Supported Platform
 
 - [x] Windows
-- [ ] macOS
-- [ ] Linux
+- [ ] macOS (準備中)
+- [ ] Linux (準備中)
 
 ## Authors
 
