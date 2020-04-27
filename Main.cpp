@@ -32,12 +32,40 @@ void Main()
 
 	const FilePath localFilePath = U"logo.png";
 	Print << client.downloadFile(U"https://raw.githubusercontent.com/Siv3D/siv3d.docs.images/master/logo/logo.png", localFilePath);
-	
+
 	const Texture texture(localFilePath);
 
 	while (System::Update())
 	{
 		texture.draw();
+	}
+
+# elif 1
+
+	//
+	// HTTP GET - Bearer Authentication
+	//
+
+	HTTPClient client;
+
+	const URL url = U"https://httpbin.org/bearer";
+	const HTTPHeader header = {
+		{ U"Authorization", U"Bearer RequestFromSiv3D" },
+	};
+	const FilePath localFilePath = U"resultAuth.json";
+
+	if (client.get(url, header, localFilePath))
+	{
+		Print << TextReader(localFilePath).readAll();
+	}
+	else
+	{
+		Print << U"Failed";
+	}
+
+	while (System::Update())
+	{
+
 	}
 
 # else
