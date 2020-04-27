@@ -64,6 +64,56 @@ namespace s3d
 		return true;
 	}
 
+	bool HTTPClient::get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath)
+	{
+		BinaryWriter writer(saveFilePath);
+		{
+			if (!writer)
+			{
+				return false;
+			}
+		}
+
+		::CURL* curl = ::curl_easy_init();
+		{
+			if (!curl)
+			{
+				return false;
+			}
+		}
+
+		// ヘッダの追加
+		{
+			::curl_slist* header_slist = nullptr;
+
+			for (auto [f, s] : header)
+			{
+				const std::string text = U"{}: {}"_fmt(f, s).toUTF8();
+				header_slist = ::curl_slist_append(header_slist, text.c_str());
+			}
+
+			::curl_easy_setopt(curl, ::CURLOPT_HTTPHEADER, header_slist);
+		}
+
+		const std::string urlUTF8 = Unicode::ToUTF8(url);
+		::curl_easy_setopt(curl, ::CURLOPT_URL, urlUTF8.c_str());
+
+		::curl_easy_setopt(curl, ::CURLOPT_WRITEFUNCTION, detail::CallbackWrite);
+		::curl_easy_setopt(curl, ::CURLOPT_WRITEDATA, &writer);
+
+		const ::CURLcode result = ::curl_easy_perform(curl);
+		::curl_easy_cleanup(curl);
+
+		if (result != ::CURLE_OK)
+		{
+			LOG_FAIL(U"curl failed (CURLcode: {})"_fmt(result));
+			writer.clear();
+			return false;
+		}
+
+		return true;
+	}
+
 	bool HTTPClient::post(const URLView url, const HTTPHeader& header, const void* src, size_t size, const FilePathView saveFilePath)
 	{
 		BinaryWriter writer(saveFilePath);

@@ -49,6 +49,20 @@ namespace s3d
 		//bool downloadFileAsync(URLView url, FilePathView saveFilePath);
 
 		/// <summary>
+		/// HTTP-GETリクエストを送ります
+		/// </summary>
+		/// <param name="url">
+		/// URL
+		/// </param>
+		/// <param name="header">
+		/// ヘッダ
+		/// </param>
+		/// <param name="saveFilePath">
+		/// 取得したファイルの保存先のファイルパス
+		/// </param>
+		bool get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath);
+
+		/// <summary>
 		/// HTTP-POSTリクエストを送ります
 		/// </summary>
 		/// <param name="url">
