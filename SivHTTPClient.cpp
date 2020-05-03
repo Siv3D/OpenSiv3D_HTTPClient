@@ -50,7 +50,7 @@ namespace s3d
 
 		::curl_easy_setopt(curl, ::CURLOPT_WRITEFUNCTION, detail::CallbackWrite);
 		::curl_easy_setopt(curl, ::CURLOPT_WRITEDATA, &writer);
-		
+
 		const ::CURLcode result = ::curl_easy_perform(curl);
 		::curl_easy_cleanup(curl);
 
@@ -83,17 +83,16 @@ namespace s3d
 		}
 
 		// ヘッダの追加
+		::curl_slist* header_slist = nullptr;
+
+		for (auto [f, s] : header)
 		{
-			::curl_slist* header_slist = nullptr;
-
-			for (auto [f, s] : header)
-			{
-				const std::string text = U"{}: {}"_fmt(f, s).toUTF8();
-				header_slist = ::curl_slist_append(header_slist, text.c_str());
-			}
-
-			::curl_easy_setopt(curl, ::CURLOPT_HTTPHEADER, header_slist);
+			const std::string text = U"{}: {}"_fmt(f, s).toUTF8();
+			header_slist = ::curl_slist_append(header_slist, text.c_str());
 		}
+
+		::curl_easy_setopt(curl, ::CURLOPT_HTTPHEADER, header_slist);
+		
 
 		const std::string urlUTF8 = Unicode::ToUTF8(url);
 		::curl_easy_setopt(curl, ::CURLOPT_URL, urlUTF8.c_str());
@@ -103,6 +102,7 @@ namespace s3d
 
 		const ::CURLcode result = ::curl_easy_perform(curl);
 		::curl_easy_cleanup(curl);
+		::curl_slist_free_all(header_slist);
 
 		if (result != ::CURLE_OK)
 		{
@@ -133,18 +133,16 @@ namespace s3d
 		}
 
 		// ヘッダの追加
+		::curl_slist* header_slist = nullptr;
+
+		for (auto [f, s] : header)
 		{
-			::curl_slist* header_slist = nullptr;
-
-			for (auto [f, s] : header)
-			{
-				const std::string text = U"{}: {}"_fmt(f, s).toUTF8();
-				header_slist = ::curl_slist_append(header_slist, text.c_str());
-			}
-
-			::curl_easy_setopt(curl, ::CURLOPT_HTTPHEADER, header_slist);
+			const std::string text = U"{}: {}"_fmt(f, s).toUTF8();
+			header_slist = ::curl_slist_append(header_slist, text.c_str());
 		}
-	
+
+		::curl_easy_setopt(curl, ::CURLOPT_HTTPHEADER, header_slist);
+
 		const std::string urlUTF8 = Unicode::ToUTF8(url);
 		::curl_easy_setopt(curl, ::CURLOPT_URL, urlUTF8.c_str());
 
@@ -160,6 +158,7 @@ namespace s3d
 
 		const ::CURLcode result = ::curl_easy_perform(curl);
 		::curl_easy_cleanup(curl);
+		::curl_slist_free_all(header_slist);
 
 		if (result != ::CURLE_OK)
 		{
