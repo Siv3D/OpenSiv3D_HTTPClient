@@ -19,6 +19,12 @@ namespace s3d
 	/// </summary>
 	class HTTPClient
 	{
+	private:
+
+		String m_responseHeader;
+
+		Optional<int32> m_statusCode;
+
 	public:
 
 		/// <summary>
@@ -32,6 +38,24 @@ namespace s3d
 		static void CleanupCURL();
 
 		HTTPClient() = default;
+
+		/// <summary>
+		/// 直前のレスポンスのステータスコードを取得します
+		/// </summary>
+		/// <returns>
+		/// 直前に通信したものがないもしくは通信中の場合 none
+		/// それ以外はステータスコードが返る
+		/// </returns>
+		[[nodiscard]] Optional<int32> statusCode() const;
+
+		/// <summary>
+		/// 直前のレスポンスのレスポンスヘッダーを取得します
+		/// </summary>
+		/// <returns>
+		/// 直前に通信したものがないもしくは通信中の場合 none
+		/// それ以外はレスポンスヘッダーが返る
+		/// </returns>
+		[[nodiscard]] Optional<String> responseHeader() const;
 
 		/// <summary>
 		/// ファイルをダウンロードします。
