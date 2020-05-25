@@ -15,6 +15,16 @@ namespace s3d
 
 			return size_bytes;
 		}
+
+		static size_t HeaderCallback(char* buffer, size_t size, size_t nitems, String* gotData)
+		{
+			const size_t size_bytes = (size * nitems);
+			std::string str;
+			str.append(buffer, size_bytes);
+			gotData->append(Unicode::Widen(str));
+
+			return size_bytes;
+		}
 	}
 
 	bool HTTPClient::InitCURL()
@@ -25,6 +35,24 @@ namespace s3d
 	void HTTPClient::CleanupCURL()
 	{
 		::curl_global_cleanup();
+	}
+
+	Optional<int32> HTTPClient::statusCode() const
+	{
+		return m_statusCode;
+	}
+
+	Optional<String> HTTPClient::responseHeader() const
+	{
+		if (!statusCode()) 
+		{
+			return none;
+		}
+		if (m_responseHeader.isEmpty())
+		{
+			return none;
+		}
+		return m_responseHeader;
 	}
 
 	bool HTTPClient::downloadFile(const URLView url, FilePathView saveFilePath)
@@ -51,6 +79,18 @@ namespace s3d
 		::curl_easy_setopt(curl, ::CURLOPT_WRITEFUNCTION, detail::CallbackWrite);
 		::curl_easy_setopt(curl, ::CURLOPT_WRITEDATA, &writer);
 
+		// レスポンスヘッダーの設定
+		{
+			if (!m_responseHeader.isEmpty())
+			{
+				m_responseHeader.clear();
+			}
+			::curl_easy_setopt(curl, ::CURLOPT_HEADERFUNCTION, detail::HeaderCallback);
+			::curl_easy_setopt(curl, ::CURLOPT_HEADERDATA, &m_responseHeader);
+		}
+
+		m_statusCode.reset();
+
 		const ::CURLcode result = ::curl_easy_perform(curl);
 		::curl_easy_cleanup(curl);
 
@@ -59,6 +99,13 @@ namespace s3d
 			LOG_FAIL(U"curl failed (CURLcode: {})"_fmt(result));
 			writer.clear();
 			return false;
+		}
+
+		// ステータスコードの設定
+		{
+			if (!m_responseHeader.isEmpty()) {
+				m_statusCode = ParseOpt<int32>(m_responseHeader.split('\n')[0].split(' ')[1]);
+			}
 		}
 
 		return true;
@@ -100,6 +147,18 @@ namespace s3d
 		::curl_easy_setopt(curl, ::CURLOPT_WRITEFUNCTION, detail::CallbackWrite);
 		::curl_easy_setopt(curl, ::CURLOPT_WRITEDATA, &writer);
 
+		// レスポンスヘッダーの設定
+		{
+			if (!m_responseHeader.isEmpty())
+			{
+				m_responseHeader.clear();
+			}
+			::curl_easy_setopt(curl, ::CURLOPT_HEADERFUNCTION, detail::HeaderCallback);
+			::curl_easy_setopt(curl, ::CURLOPT_HEADERDATA, &m_responseHeader);
+		}
+
+		m_statusCode.reset();
+
 		const ::CURLcode result = ::curl_easy_perform(curl);
 		::curl_easy_cleanup(curl);
 		::curl_slist_free_all(header_slist);
@@ -109,6 +168,13 @@ namespace s3d
 			LOG_FAIL(U"curl failed (CURLcode: {})"_fmt(result));
 			writer.clear();
 			return false;
+		}
+
+		// ステータスコードの設定
+		{
+			if (!m_responseHeader.isEmpty()) {
+				m_statusCode = ParseOpt<int32>(m_responseHeader.split('\n')[0].split(' ')[1]);
+			}
 		}
 
 		return true;
@@ -156,6 +222,18 @@ namespace s3d
 		::curl_easy_setopt(curl, ::CURLOPT_WRITEFUNCTION, detail::CallbackWrite);
 		::curl_easy_setopt(curl, ::CURLOPT_WRITEDATA, &writer);
 
+		// レスポンスヘッダーの設定
+		{
+			if (!m_responseHeader.isEmpty())
+			{
+				m_responseHeader.clear();
+			}
+			::curl_easy_setopt(curl, ::CURLOPT_HEADERFUNCTION, detail::HeaderCallback);
+			::curl_easy_setopt(curl, ::CURLOPT_HEADERDATA, &m_responseHeader);
+		}
+
+		m_statusCode.reset();
+
 		const ::CURLcode result = ::curl_easy_perform(curl);
 		::curl_easy_cleanup(curl);
 		::curl_slist_free_all(header_slist);
@@ -165,6 +243,13 @@ namespace s3d
 			LOG_FAIL(U"curl failed (CURLcode: {})"_fmt(result));
 			writer.clear();
 			return false;
+		}
+
+		// ステータスコードの設定
+		{
+			if (!m_responseHeader.isEmpty()) {
+				m_statusCode = ParseOpt<int32>(m_responseHeader.split('\n')[0].split(' ')[1]);
+			}
 		}
 
 		return true;
