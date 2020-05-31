@@ -31,8 +31,11 @@ void Main()
 	HTTPClient client;
 
 	const FilePath localFilePath = U"logo.png";
-	Print << client.downloadFile(U"https://raw.githubusercontent.com/Siv3D/siv3d.docs.images/master/logo/logo.png", localFilePath);
-	Print << client.statusCode();
+	
+	if (const HTTPResponse response = client.downloadFile(U"https://raw.githubusercontent.com/Siv3D/siv3d.docs.images/master/logo/logo.png", localFilePath)) {
+		Print << response.getHeader();
+		Print << response.getStatusCode();
+	}
 
 	const Texture texture(localFilePath);
 
@@ -41,7 +44,7 @@ void Main()
 		texture.draw();
 	}
 
-# elif 1
+# elif 0
 
 	//
 	// HTTP GET - Bearer Authentication
@@ -55,10 +58,10 @@ void Main()
 	};
 	const FilePath localFilePath = U"resultAuth.json";
 
-	if (client.get(url, header, localFilePath))
+	if (const HTTPResponse response = client.get(url, header, localFilePath))
 	{
 		Print << TextReader(localFilePath).readAll();
-		Print << client.statusCode();
+		Print << response.getStatusCode();
 	}
 	else
 	{
@@ -85,10 +88,10 @@ void Main()
 	const std::string json = CreateTestJSONData();
 	const FilePath localFilePath = U"result.json";
 
-	if (client.post(url, header, json.data(), json.size(), localFilePath))
+	if (const HTTPResponse response = client.post(url, header, json.data(), json.size(), localFilePath))
 	{
 		Print << TextReader(localFilePath).readAll();
-		Print << client.statusCode();
+		Print << response.getStatusCode();
 	}
 	else
 	{

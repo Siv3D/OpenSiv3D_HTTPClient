@@ -14,16 +14,36 @@ namespace s3d
 	using URLView		= StringView;
 	using HTTPHeader	= HashTable<String, String>;
 
+	class HTTPResponse 
+	{
+	private:
+
+		String m_header;
+
+		static constexpr int32 InvalidStatusCode = 0;
+
+		int32 m_statusCode = InvalidStatusCode;
+
+	public:
+
+		HTTPResponse() = default;
+
+		explicit HTTPResponse(const String & header);
+
+		bool isValid() const;
+
+		explicit operator bool() const;
+
+		const String& getHeader() const;
+
+		int32 getStatusCode() const;
+	};
+
 	/// <summary>
 	/// HTTP通信を行うクラス
 	/// </summary>
 	class HTTPClient
 	{
-	private:
-
-		String m_responseHeader;
-
-		Optional<int32> m_statusCode;
 
 	public:
 
@@ -40,24 +60,6 @@ namespace s3d
 		HTTPClient() = default;
 
 		/// <summary>
-		/// 直前のレスポンスのステータスコードを取得します
-		/// </summary>
-		/// <returns>
-		/// 直前に通信したものがないもしくは通信中の場合 none
-		/// それ以外はステータスコードが返る
-		/// </returns>
-		[[nodiscard]] Optional<int32> statusCode() const;
-
-		/// <summary>
-		/// 直前のレスポンスのレスポンスヘッダーを取得します
-		/// </summary>
-		/// <returns>
-		/// 直前に通信したものがないもしくは通信中の場合 none
-		/// それ以外はレスポンスヘッダーが返る
-		/// </returns>
-		[[nodiscard]] Optional<String> responseHeader() const;
-
-		/// <summary>
 		/// ファイルをダウンロードします。
 		/// </summary>
 		/// <param name="url">
@@ -66,7 +68,7 @@ namespace s3d
 		/// <param name="saveFilePath">
 		/// 取得したファイルの保存先のファイルパス
 		/// </param>
-		bool downloadFile(URLView url, FilePathView saveFilePath);
+		HTTPResponse downloadFile(URLView url, FilePathView saveFilePath);
 
 		// [Siv3D ToDo]
 		// (参考: https://curl.haxx.se/libcurl/c/progressfunc.html)
@@ -84,7 +86,7 @@ namespace s3d
 		/// <param name="saveFilePath">
 		/// 取得したファイルの保存先のファイルパス
 		/// </param>
-		bool get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath);
+		HTTPResponse get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath);
 
 		/// <summary>
 		/// HTTP-POSTリクエストを送ります
@@ -104,6 +106,6 @@ namespace s3d
 		/// <param name="saveFilePath">
 		/// 取得したファイルの保存先のファイルパス
 		/// </param>
-		bool post(URLView url, const HTTPHeader& header, const void* src, size_t size, FilePathView saveFilePath);
+		HTTPResponse post(URLView url, const HTTPHeader& header, const void* src, size_t size, FilePathView saveFilePath);
 	};
 }
