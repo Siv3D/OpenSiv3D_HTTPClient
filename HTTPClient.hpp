@@ -1,4 +1,5 @@
 ﻿# pragma once
+# define SIV3D_CONCURRENT
 # include <Siv3D.hpp>
 
 # if SIV3D_BUILD_TYPE(DEBUG)
@@ -10,11 +11,42 @@
 
 namespace s3d
 {
-	using URL			= String;
-	using URLView		= StringView;
-	using HTTPHeader	= HashTable<String, String>;
+	using URL = String;
+	using URLView = StringView;
+	using HTTPHeader = HashTable<String, String>;
 
-	class HTTPResponse 
+	/// <summary>
+	/// ダウンロードの進行状況
+	/// </summary>
+	enum class HTTPAsyncStatus
+	{
+		/// <summary>
+		/// ダウンロードするものが無い
+		/// </summary>
+		None,
+
+		/// <summary>
+		/// ダウンロード中
+		/// </summary>
+		Working,
+
+		/// <summary>
+		/// ダウンロード失敗
+		/// </summary>
+		Failed,
+
+		/// <summary>
+		/// ダウンロードがキャンセルされた
+		/// </summary>
+		Canceled,
+
+		/// <summary>
+		/// ダウンロード完了
+		/// </summary>
+		Succeeded,
+	};
+
+	class HTTPResponse
 	{
 	private:
 
@@ -28,15 +60,111 @@ namespace s3d
 
 		HTTPResponse() = default;
 
-		explicit HTTPResponse(const String & header);
+		explicit HTTPResponse(const String& header);
 
+		/// <summary>
+		/// レスポンスヘッダーのステータスコードが有効であるかを返します。
+		/// </summary>
 		bool isValid() const;
 
+		/// <summary>
+		/// isVaild()
+		/// </summary>
 		explicit operator bool() const;
 
+		/// <summary>
+		/// レスポンスヘッダーを返します。
+		/// </summary>
 		const String& getHeader() const;
 
+		/// <summary>
+		/// ステータスコードを返します。
+		/// </summary>
 		int32 getStatusCode() const;
+	};
+
+	struct HTTPProgress
+	{
+		HTTPProgress() = default;
+
+		HTTPProgress(URLView url);
+
+		/// <summary>
+		/// ダウンロードするファイルの合計サイズ。不明の場合 none
+		/// </summary>
+		Optional<int64> downloadTotalSize;
+
+		/// <summary>
+		/// アップロードするファイルの合計サイズ。不明の場合 none
+		/// </summary>
+		Optional<int64> uploadTotalSize;
+
+		/// <summary>
+		/// ダウンロードしたファイルのサイズ。
+		/// </summary>
+		int64 downloadNowSize = 0;
+
+		/// <summary>
+		/// アップロードしたファイルのサイズ。
+		/// </summary>
+		int64 uploadNowSize = 0;
+
+		/// <summary>
+		/// ダウンロードの進行状況の割合。不明の場合 none
+		/// </summary>
+		Optional<double> getDownloadProgress() const;
+
+		/// <summary>
+		/// アップロードの進行状況の割合。不明の場合 none
+		/// </summary>
+		Optional<double> getUploadProgress() const;
+
+		/// <summary>
+		/// 通信先のURL
+		/// </summary>
+		URL url;
+
+		HTTPAsyncStatus status = HTTPAsyncStatus::None;
+
+		/// <summary>
+		/// 通信中にtrueにすると通信をキャンセルします
+		/// </summary>
+		bool cancelCommunication = false;
+	};
+
+	class AsyncHTTPTask
+	{
+	private:
+
+		HTTPProgress m_progressValue;
+
+		HTTPResponse m_response;
+
+		BinaryWriter m_writer;
+
+		ConcurrentTask<HTTPResponse> m_task;
+
+		HTTPResponse innerDownloadTask();
+
+	public:
+
+		AsyncHTTPTask() = default;
+
+		AsyncHTTPTask(URLView url, FilePathView path);
+
+		~AsyncHTTPTask();
+
+		const HTTPProgress& getProgress() const;
+
+		const HTTPResponse& getResponse() const;
+
+		//enum class : {None,Working,Canceled,Failed,Succeeded}
+		const HTTPAsyncStatus& currentStatus() const;
+
+		void cancelTask();
+
+		//実行時にtask.get()
+		bool isDone();
 	};
 
 	/// <summary>
@@ -44,7 +172,6 @@ namespace s3d
 	/// </summary>
 	class HTTPClient
 	{
-
 	public:
 
 		/// <summary>
@@ -70,9 +197,7 @@ namespace s3d
 		/// </param>
 		HTTPResponse downloadFile(URLView url, FilePathView saveFilePath);
 
-		// [Siv3D ToDo]
-		// (参考: https://curl.haxx.se/libcurl/c/progressfunc.html)
-		//bool downloadFileAsync(URLView url, FilePathView saveFilePath);
+		AsyncHTTPTask downloadFileAsync(URLView url, FilePathView saveFilePath);
 
 		/// <summary>
 		/// HTTP-GETリクエストを送ります
