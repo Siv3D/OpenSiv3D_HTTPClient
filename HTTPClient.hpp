@@ -136,21 +136,15 @@ namespace s3d
 	{
 	private:
 
-		HTTPProgress m_progressValue;
+		class AsyncHTTPTaskImpl;
 
-		HTTPResponse m_response;
-
-		BinaryWriter m_writer;
-
-		ConcurrentTask<HTTPResponse> m_task;
-
-		HTTPResponse innerDownloadTask();
+		std::shared_ptr<AsyncHTTPTaskImpl> pImpl;
 
 	public:
 
-		AsyncHTTPTask() = default;
+		AsyncHTTPTask();
 
-		AsyncHTTPTask(URLView url, FilePathView path);
+		explicit AsyncHTTPTask(URLView url, FilePathView path);
 
 		~AsyncHTTPTask();
 

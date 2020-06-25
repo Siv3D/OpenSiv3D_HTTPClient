@@ -14,11 +14,6 @@ std::string CreateTestJSONData()
 	return json.get().toUTF8();
 }
 
-int32 f(int32 y) {
-	Print << y;
-	return y * 3;
-}
-
 void Main()
 {
 	if (!HTTPClient::InitCURL())
@@ -36,7 +31,8 @@ void Main()
 
 	const FilePath localFilePath = U"logo.png";
 
-	if (const HTTPResponse response = client.downloadFile(U"https://raw.githubusercontent.com/Siv3D/siv3d.docs.images/master/logo/logo.png", localFilePath)) {
+	if (const HTTPResponse response = client.downloadFile(U"https://raw.githubusercontent.com/Siv3D/siv3d.docs.images/master/logo/logo.png", localFilePath))
+	{
 		Print << response.getHeader();
 		Print << response.getStatusCode();
 	}
@@ -57,7 +53,8 @@ void Main()
 	HTTPClient client;
 
 	const URL url = U"https://httpbin.org/bearer";
-	const HTTPHeader header = {
+	const HTTPHeader header =
+	{
 		{ U"Authorization", U"Bearer RequestFromSiv3D" }
 	};
 	const FilePath localFilePath = U"resultAuth.json";
@@ -79,13 +76,17 @@ void Main()
 
 # elif 1
 
+	//
+	// HTTP GET - Async Communication
+	//
+
 	HTTPClient client;
 
 	const URL url = U"http://httpbin.org/drip?duration=2&numbytes=1000&code=200&delay=0";
 
 	const FilePath localFilePath = U"drip.txt";
 
-	AsyncHTTPTask task = client.downloadFileAsync(url, localFilePath);
+	AsyncHTTPTask task;
 
 	Font font(50);
 
@@ -93,14 +94,21 @@ void Main()
 
 	double progressPercentage = 0;
 
-	while (System::Update()) {
+	while (System::Update())
+	{
+		if (SimpleGUI::ButtonAt(U"Download Start!", Scene::Center() - Point(0, 100), unspecified,
+			task.getProgress().status == HTTPAsyncStatus::None))
+		{
+			task = client.downloadFileAsync(url, localFilePath);
+		}
 
 		progressPercentage = task.getProgress().getDownloadProgress().value_or(0);
 
 		PFrame.drawFrame();
-		RectF(PFrame.pos, progressPercentage * PFrame.w, 50).draw(task.currentStatus() == HTTPAsyncStatus::Succeeded ? Palette::Yellowgreen : Palette::Orange);
+		RectF(PFrame.pos, progressPercentage * PFrame.w, 50)
+			.draw(task.currentStatus() == HTTPAsyncStatus::Succeeded ? Palette::Yellowgreen : Palette::Orange);
 		font(U"{:.1f}"_fmt(progressPercentage * 100), U"%").drawAt(PFrame.center());
-		
+
 		switch (task.currentStatus())
 		{
 		case HTTPAsyncStatus::None:
@@ -122,21 +130,26 @@ void Main()
 			break;
 		}
 
-		if (MouseR.down()) {
+		if (MouseR.down())
+		{
 			task.cancelTask();
 		}
 
-		if (task.isDone()) {
-			if (task.getResponse()) {
+		if (task.isDone())
+		{
+			if (task.getResponse())
+			{
 				BinaryReader reader(localFilePath);
 				Print << U"received size : " << reader.size();
 				Print << task.getResponse().getStatusCode();
 			}
-			else {
+			else
+			{
 				//通信失敗
 				Print << U"Failed";
 			}
 		}
+
 	}
 
 # else
@@ -148,7 +161,8 @@ void Main()
 	HTTPClient client;
 
 	const URL url = U"https://httpbin.org/post";
-	const HTTPHeader header = {
+	const HTTPHeader header = 
+	{
 		{ U"Content-Type", U"application/json" }
 	};
 	const std::string json = CreateTestJSONData();

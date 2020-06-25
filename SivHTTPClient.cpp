@@ -1,4 +1,5 @@
 ﻿# include "HTTPClient.hpp"
+# include "AsyncHTTPTaskImpl.hpp"
 # define CURL_STATICLIB
 # include <curl/curl.h>
 
@@ -116,74 +117,14 @@ namespace s3d
 		return static_cast<double>(uploadNowSize) / uploadTotalSize.value();
 	}
 
-	HTTPResponse AsyncHTTPTask::innerDownloadTask()
+	AsyncHTTPTask::AsyncHTTPTask()
+		: pImpl(std::make_shared<AsyncHTTPTaskImpl>())
 	{
-		m_progressValue.status = HTTPAsyncStatus::Working;
-		{
-			if (!m_writer)
-			{
-				m_progressValue.status = HTTPAsyncStatus::Failed;
-				return HTTPResponse{};
-			}
-		}
-
-		::CURL* curl = ::curl_easy_init();
-		{
-			if (!curl)
-			{
-				m_progressValue.status = HTTPAsyncStatus::Failed;
-				return HTTPResponse{};
-			}
-		}
-
-		const std::string urlUTF8 = Unicode::ToUTF8(m_progressValue.url);
-		::curl_easy_setopt(curl, ::CURLOPT_URL, urlUTF8.c_str());
-
-		::curl_easy_setopt(curl, ::CURLOPT_WRITEFUNCTION, detail::CallbackWrite);
-		::curl_easy_setopt(curl, ::CURLOPT_WRITEDATA, &m_writer);
-
-		::curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, detail::XferInfo);
-		::curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &m_progressValue);
-
-		::curl_easy_setopt(curl, ::CURLOPT_NOPROGRESS, 0L);
-
-		// レスポンスヘッダーの設定
-		String headerString;
-		{
-			::curl_easy_setopt(curl, ::CURLOPT_HEADERFUNCTION, detail::HeaderCallback);
-			::curl_easy_setopt(curl, ::CURLOPT_HEADERDATA, &headerString);
-		}
-
-		const ::CURLcode result = ::curl_easy_perform(curl);
-		::curl_easy_cleanup(curl);
-
-		if (result != ::CURLE_OK)
-		{
-			LOG_FAIL(U"curl failed (CURLcode: {})"_fmt(result));
-			m_writer.clear();
-			if (m_progressValue.cancelCommunication)
-			{
-				m_progressValue.status = HTTPAsyncStatus::Canceled;
-			}
-			else
-			{
-				m_progressValue.status = HTTPAsyncStatus::Failed;
-			}
-			return HTTPResponse{};
-		}
-
-		m_writer.close();
-		m_progressValue.status = HTTPAsyncStatus::Succeeded;
-		return HTTPResponse(headerString);
 	}
 
 	AsyncHTTPTask::AsyncHTTPTask(URLView url, FilePathView path)
-		: m_progressValue(url)
-		, m_response()
-		, m_writer(path)
-		, m_task()
+		: pImpl(std::make_shared<AsyncHTTPTaskImpl>(url,path))
 	{
-		m_task = CreateConcurrentTask(&AsyncHTTPTask::innerDownloadTask, this);
 	}
 
 	AsyncHTTPTask::~AsyncHTTPTask()
@@ -198,37 +139,27 @@ namespace s3d
 
 	const HTTPProgress& AsyncHTTPTask::getProgress() const
 	{
-		return m_progressValue;
+		return pImpl->getProgress();
 	}
 
 	const HTTPResponse& AsyncHTTPTask::getResponse() const
 	{
-		return m_response;
+		return pImpl->getResponse();
 	}
 
 	const HTTPAsyncStatus& AsyncHTTPTask::currentStatus() const
 	{
-		return m_progressValue.status;
+		return pImpl->currentStatus();
 	}
 
 	void AsyncHTTPTask::cancelTask()
 	{
-		m_progressValue.cancelCommunication = true;
+		pImpl->cancelTask();
 	}
 
 	bool AsyncHTTPTask::isDone()
 	{
-		if (!m_task.is_done())
-		{
-			return false;
-		}
-
-		if (m_task.valid())
-		{
-			m_response = m_task.get();
-		}
-
-		return true;
+		return pImpl->isDone();
 	}
 
 	bool HTTPClient::InitCURL()
@@ -411,6 +342,124 @@ namespace s3d
 		}
 
 		return HTTPResponse(headerString);
+	}
+
+
+	//AsyncHTTPTaskImpl.hpp
+
+	HTTPResponse AsyncHTTPTask::AsyncHTTPTaskImpl::innerDownloadTask()
+	{
+		m_progressValue.status = HTTPAsyncStatus::Working;
+		{
+			if (!m_writer)
+			{
+				m_progressValue.status = HTTPAsyncStatus::Failed;
+				return HTTPResponse{};
+			}
+		}
+
+		::CURL* curl = ::curl_easy_init();
+		{
+			if (!curl)
+			{
+				m_progressValue.status = HTTPAsyncStatus::Failed;
+				return HTTPResponse{};
+			}
+		}
+
+		const std::string urlUTF8 = Unicode::ToUTF8(m_progressValue.url);
+		::curl_easy_setopt(curl, ::CURLOPT_URL, urlUTF8.c_str());
+
+		::curl_easy_setopt(curl, ::CURLOPT_WRITEFUNCTION, detail::CallbackWrite);
+		::curl_easy_setopt(curl, ::CURLOPT_WRITEDATA, &m_writer);
+
+		::curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, detail::XferInfo);
+		::curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &m_progressValue);
+
+		::curl_easy_setopt(curl, ::CURLOPT_NOPROGRESS, 0L);
+
+		// レスポンスヘッダーの設定
+		String headerString;
+		{
+			::curl_easy_setopt(curl, ::CURLOPT_HEADERFUNCTION, detail::HeaderCallback);
+			::curl_easy_setopt(curl, ::CURLOPT_HEADERDATA, &headerString);
+		}
+
+		const ::CURLcode result = ::curl_easy_perform(curl);
+		::curl_easy_cleanup(curl);
+
+		if (result != ::CURLE_OK)
+		{
+			LOG_FAIL(U"curl failed (CURLcode: {})"_fmt(result));
+			m_writer.clear();
+			if (m_progressValue.cancelCommunication)
+			{
+				m_progressValue.status = HTTPAsyncStatus::Canceled;
+			}
+			else
+			{
+				m_progressValue.status = HTTPAsyncStatus::Failed;
+			}
+			return HTTPResponse{};
+		}
+
+		m_writer.close();
+		m_progressValue.status = HTTPAsyncStatus::Succeeded;
+		return HTTPResponse(headerString);
+	}
+
+	AsyncHTTPTask::AsyncHTTPTaskImpl::AsyncHTTPTaskImpl(URLView url, FilePathView path)
+		: m_progressValue(url)
+		, m_response()
+		, m_writer(path)
+		, m_task()
+	{
+		m_task = CreateConcurrentTask(&AsyncHTTPTask::AsyncHTTPTaskImpl::innerDownloadTask, this);
+	}
+
+	AsyncHTTPTask::AsyncHTTPTaskImpl::~AsyncHTTPTaskImpl()
+	{
+		if (currentStatus() == HTTPAsyncStatus::Working)
+		{
+			cancelTask();
+			//libcurl側でfailするのでログ出力はそれに任せてもよいかも知れない
+			LOG_FAIL(U"Cancel of Download.");
+		}
+	}
+
+	const HTTPProgress& AsyncHTTPTask::AsyncHTTPTaskImpl::getProgress() const
+	{
+		return m_progressValue;
+	}
+
+	const HTTPResponse& AsyncHTTPTask::AsyncHTTPTaskImpl::getResponse() const
+	{
+		return m_response;
+	}
+
+	const HTTPAsyncStatus& AsyncHTTPTask::AsyncHTTPTaskImpl::currentStatus() const
+	{
+		return m_progressValue.status;
+	}
+
+	void AsyncHTTPTask::AsyncHTTPTaskImpl::cancelTask()
+	{
+		m_progressValue.cancelCommunication = true;
+	}
+
+	bool AsyncHTTPTask::AsyncHTTPTaskImpl::isDone()
+	{
+		if (!m_task.is_done())
+		{
+			return false;
+		}
+
+		if (m_task.valid())
+		{
+			m_response = m_task.get();
+		}
+
+		return true;
 	}
 
 }
