@@ -16,7 +16,7 @@ std::string CreateTestJSONData()
 
 void Main()
 {
-	if (!HTTPClient::InitCURL())
+	if (!SimpleHTTP::InitCURL())
 	{
 		return;
 	}
@@ -27,11 +27,9 @@ void Main()
 	// HTTP GET
 	//
 
-	HTTPClient client;
-
 	const FilePath localFilePath = U"logo.png";
 
-	if (const HTTPResponse response = client.downloadFile(U"https://raw.githubusercontent.com/Siv3D/siv3d.docs.images/master/logo/logo.png", localFilePath))
+	if (const HTTPResponse response = SimpleHTTP::DownloadFile(U"https://raw.githubusercontent.com/Siv3D/siv3d.docs.images/master/logo/logo.png", localFilePath))
 	{
 		Print << response.getHeader();
 		Print << response.getStatusCode();
@@ -50,8 +48,6 @@ void Main()
 	// HTTP GET - Bearer Authentication
 	//
 
-	HTTPClient client;
-
 	const URL url = U"https://httpbin.org/bearer";
 	const HTTPHeader header =
 	{
@@ -59,7 +55,7 @@ void Main()
 	};
 	const FilePath localFilePath = U"resultAuth.json";
 
-	if (const HTTPResponse response = client.get(url, header, localFilePath))
+	if (const HTTPResponse response = SimpleHTTP::Get(url, header, localFilePath))
 	{
 		Print << TextReader(localFilePath).readAll();
 		Print << response.getStatusCode();
@@ -80,8 +76,6 @@ void Main()
 	// HTTP GET - Async Communication
 	//
 
-	HTTPClient client;
-
 	const URL url = U"http://httpbin.org/drip?duration=2&numbytes=1000&code=200&delay=0";
 
 	const FilePath localFilePath = U"drip.txt";
@@ -99,7 +93,7 @@ void Main()
 		if (SimpleGUI::ButtonAt(U"Download Start!", Scene::Center() - Point(0, 100), unspecified,
 			task.getProgress().status == HTTPAsyncStatus::None))
 		{
-			task = client.downloadFileAsync(url, localFilePath);
+			task = SimpleHTTP::DownloadFileAsync(url, localFilePath);
 		}
 
 		progressPercentage = task.getProgress().getDownloadProgress().value_or(0);
@@ -158,8 +152,6 @@ void Main()
 	// HTTP POST
 	//
 
-	HTTPClient client;
-
 	const URL url = U"https://httpbin.org/post";
 	const HTTPHeader header = 
 	{
@@ -168,7 +160,7 @@ void Main()
 	const std::string json = CreateTestJSONData();
 	const FilePath localFilePath = U"result.json";
 
-	if (const HTTPResponse response = client.post(url, header, json.data(), json.size(), localFilePath))
+	if (const HTTPResponse response = SimpleHTTP::Post(url, header, json.data(), json.size(), localFilePath))
 	{
 		Print << TextReader(localFilePath).readAll();
 		Print << response.getStatusCode();
@@ -185,5 +177,5 @@ void Main()
 
 # endif
 
-	HTTPClient::CleanupCURL();
+	SimpleHTTP::CleanupCURL();
 }

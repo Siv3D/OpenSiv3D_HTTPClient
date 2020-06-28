@@ -15,6 +15,10 @@ namespace s3d
 	using URLView = StringView;
 	using HTTPHeader = HashTable<String, String>;
 
+	class HTTPResponse;
+	struct HTTPProgress;
+	class AsyncHTTPTask;
+
 	/// <summary>
 	/// ダウンロードの進行状況
 	/// </summary>
@@ -44,6 +48,66 @@ namespace s3d
 		/// ダウンロード完了
 		/// </summary>
 		Succeeded,
+	};
+
+	namespace SimpleHTTP
+	{
+		/// <summary>
+		/// HTTPClient を使うアプリケーションで、最初に 1 回だけ呼び出します。([Siv3D ToDo]: エンジン内に組み込み)
+		/// </summary>
+		bool InitCURL();
+
+		/// <summary>
+		/// HTTPClient を使うアプリケーションで、最後に 1 回だけ呼び出します。([Siv3D ToDo]: エンジン内に組み込み)
+		/// </summary>
+		void CleanupCURL();
+
+		/// <summary>
+		/// ファイルをダウンロードします。
+		/// </summary>
+		/// <param name="url">
+		/// URL
+		/// </param>
+		/// <param name="saveFilePath">
+		/// 取得したファイルの保存先のファイルパス
+		/// </param>
+		HTTPResponse DownloadFile(URLView url, FilePathView saveFilePath);
+
+		[[nodiscard]] AsyncHTTPTask DownloadFileAsync(URLView url, FilePathView saveFilePath);
+
+		/// <summary>
+		/// HTTP-GETリクエストを送ります
+		/// </summary>
+		/// <param name="url">
+		/// URL
+		/// </param>
+		/// <param name="header">
+		/// ヘッダ
+		/// </param>
+		/// <param name="saveFilePath">
+		/// 取得したファイルの保存先のファイルパス
+		/// </param>
+		HTTPResponse Get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath);
+
+		/// <summary>
+		/// HTTP-POSTリクエストを送ります
+		/// </summary>
+		/// <param name="url">
+		/// URL
+		/// </param>
+		/// <param name="header">
+		/// ヘッダ
+		/// </param>
+		/// <param name="src">
+		/// 送信するデータの先頭ポインタ
+		/// </param>
+		/// <param name="size">
+		/// 送信するデータのサイズ（バイト）
+		/// </param>
+		/// <param name="saveFilePath">
+		/// 取得したファイルの保存先のファイルパス
+		/// </param>
+		HTTPResponse Post(URLView url, const HTTPHeader& header, const void* src, size_t size, FilePathView saveFilePath);
 	};
 
 	class HTTPResponse
@@ -136,15 +200,17 @@ namespace s3d
 	{
 	private:
 
+		friend AsyncHTTPTask SimpleHTTP::DownloadFileAsync(URLView url, FilePathView saveFilePath);
+
 		class AsyncHTTPTaskImpl;
 
 		std::shared_ptr<AsyncHTTPTaskImpl> pImpl;
 
+		explicit AsyncHTTPTask(URLView url, FilePathView path);
+
 	public:
 
 		AsyncHTTPTask();
-
-		explicit AsyncHTTPTask(URLView url, FilePathView path);
 
 		~AsyncHTTPTask();
 
@@ -175,80 +241,4 @@ namespace s3d
 		[[nodiscard]] bool isDone();
 	};
 
-	/// <summary>
-	/// HTTP通信を行うクラス
-	/// </summary>
-	class HTTPClient
-	{
-
-	public:
-
-		/// <summary>
-		/// HTTPClient を使うアプリケーションで、最初に 1 回だけ呼び出します。([Siv3D ToDo]: エンジン内に組み込み)
-		/// </summary>
-		static bool InitCURL();
-
-		/// <summary>
-		/// HTTPClient を使うアプリケーションで、最後に 1 回だけ呼び出します。([Siv3D ToDo]: エンジン内に組み込み)
-		/// </summary>
-		static void CleanupCURL();
-
-		HTTPClient() = default;
-
-		/// <summary>
-		/// ファイルをダウンロードします。
-		/// </summary>
-		/// <param name="url">
-		/// URL
-		/// </param>
-		/// <param name="saveFilePath">
-		/// 取得したファイルの保存先のファイルパス
-		/// </param>
-		HTTPResponse downloadFile(URLView url, FilePathView saveFilePath);
-
-		/// <summary>
-		/// 非同期でファイルをダウンロードします
-		/// </summary>
-		/// <param name="url">
-		/// URL
-		/// </param>
-		/// <param name="saveFilePath">
-		/// 取得したファイルの保存先のファイルパス
-		/// </param>
-		[[nodiscard]] AsyncHTTPTask downloadFileAsync(URLView url, FilePathView saveFilePath);
-
-		/// <summary>
-		/// HTTP-GETリクエストを送ります
-		/// </summary>
-		/// <param name="url">
-		/// URL
-		/// </param>
-		/// <param name="header">
-		/// ヘッダ
-		/// </param>
-		/// <param name="saveFilePath">
-		/// 取得したファイルの保存先のファイルパス
-		/// </param>
-		HTTPResponse get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath);
-
-		/// <summary>
-		/// HTTP-POSTリクエストを送ります
-		/// </summary>
-		/// <param name="url">
-		/// URL
-		/// </param>
-		/// <param name="header">
-		/// ヘッダ
-		/// </param>
-		/// <param name="src">
-		/// 送信するデータの先頭ポインタ
-		/// </param>
-		/// <param name="size">
-		/// 送信するデータのサイズ（バイト）
-		/// </param>
-		/// <param name="saveFilePath">
-		/// 取得したファイルの保存先のファイルパス
-		/// </param>
-		HTTPResponse post(URLView url, const HTTPHeader& header, const void* src, size_t size, FilePathView saveFilePath);
-	};
 }

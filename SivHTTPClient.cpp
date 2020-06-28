@@ -162,17 +162,17 @@ namespace s3d
 		return pImpl->isDone();
 	}
 
-	bool HTTPClient::InitCURL()
+	bool SimpleHTTP::InitCURL()
 	{
 		return (::CURLE_OK == ::curl_global_init(CURL_GLOBAL_ALL));
 	}
 
-	void HTTPClient::CleanupCURL()
+	void SimpleHTTP::CleanupCURL()
 	{
 		::curl_global_cleanup();
 	}
 
-	HTTPResponse HTTPClient::downloadFile(const URLView url, FilePathView saveFilePath)
+	HTTPResponse SimpleHTTP::DownloadFile(const URLView url, FilePathView saveFilePath)
 	{
 
 		BinaryWriter writer(saveFilePath);
@@ -217,12 +217,12 @@ namespace s3d
 		return HTTPResponse(headerString);
 	}
 
-	AsyncHTTPTask HTTPClient::downloadFileAsync(URLView url, FilePathView saveFilePath)
+	AsyncHTTPTask SimpleHTTP::DownloadFileAsync(URLView url, FilePathView saveFilePath)
 	{
 		return AsyncHTTPTask(url, saveFilePath);
 	}
 
-	HTTPResponse HTTPClient::get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath)
+	HTTPResponse SimpleHTTP::Get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath)
 	{
 		BinaryWriter writer(saveFilePath);
 		{
@@ -280,7 +280,7 @@ namespace s3d
 		return HTTPResponse(headerString);
 	}
 
-	HTTPResponse HTTPClient::post(const URLView url, const HTTPHeader& header, const void* src, size_t size, const FilePathView saveFilePath)
+	HTTPResponse SimpleHTTP::Post(const URLView url, const HTTPHeader& header, const void* src, size_t size, const FilePathView saveFilePath)
 	{
 		BinaryWriter writer(saveFilePath);
 		{
