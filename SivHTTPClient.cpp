@@ -449,16 +449,18 @@ namespace s3d
 
 	bool AsyncHTTPTask::AsyncHTTPTaskImpl::isDone()
 	{
+		//Linuxでvaildを見る前にis_doneを見るとabortするので順序を意図的につけてます
+		if (!m_task.valid())
+		{
+			return false;
+		}
+
 		if (!m_task.is_done())
 		{
 			return false;
 		}
 
-		if (m_task.valid())
-		{
-			m_response = m_task.get();
-		}
-
+		m_response = m_task.get();
 		return true;
 	}
 
