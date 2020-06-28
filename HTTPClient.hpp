@@ -65,29 +65,29 @@ namespace s3d
 		/// <summary>
 		/// レスポンスヘッダーのステータスコードが有効であるかを返します。
 		/// </summary>
-		bool isValid() const;
+		[[nodiscard]] bool isValid() const;
 
 		/// <summary>
 		/// isVaild()
 		/// </summary>
-		explicit operator bool() const;
+		[[nodiscard]] explicit operator bool() const;
 
 		/// <summary>
 		/// レスポンスヘッダーを返します。
 		/// </summary>
-		const String& getHeader() const;
+		[[nodiscard]] const String& getHeader() const;
 
 		/// <summary>
 		/// ステータスコードを返します。
 		/// </summary>
-		int32 getStatusCode() const;
+		[[nodiscard]] int32 getStatusCode() const;
 	};
 
 	struct HTTPProgress
 	{
 		HTTPProgress() = default;
 
-		HTTPProgress(URLView url);
+		explicit HTTPProgress(URLView url);
 
 		/// <summary>
 		/// ダウンロードするファイルの合計サイズ。不明の場合 none
@@ -112,12 +112,12 @@ namespace s3d
 		/// <summary>
 		/// ダウンロードの進行状況の割合。不明の場合 none
 		/// </summary>
-		Optional<double> getDownloadProgress() const;
+		[[nodiscard]] Optional<double> getDownloadProgress() const;
 
 		/// <summary>
 		/// アップロードの進行状況の割合。不明の場合 none
 		/// </summary>
-		Optional<double> getUploadProgress() const;
+		[[nodiscard]] Optional<double> getUploadProgress() const;
 
 		/// <summary>
 		/// 通信先のURL
@@ -148,17 +148,31 @@ namespace s3d
 
 		~AsyncHTTPTask();
 
-		const HTTPProgress& getProgress() const;
+		/// <summary>
+		/// 通信の進行状況クラスを返します
+		/// </summary>
+		[[nodiscard]] const HTTPProgress& getProgress() const;
 
-		const HTTPResponse& getResponse() const;
+		/// <summary>
+		/// Tips: isDoneを実行しないと無効なレスポンスしか返ってきません
+		/// </summary>
+		[[nodiscard]] const HTTPResponse& getResponse() const;
 
-		//enum class : {None,Working,Canceled,Failed,Succeeded}
-		const HTTPAsyncStatus& currentStatus() const;
+		/// <summary>
+		/// 現在のステータスを返します
+		/// </summary>
+		[[nodiscard]] const HTTPAsyncStatus& currentStatus() const;
 
+		/// <summary>
+		/// 実行中の通信をキャンセルします
+		/// </summary>
 		void cancelTask();
 
-		//実行時にtask.get()
-		bool isDone();
+		/// <summary>
+		/// 通信が完了したかを返します
+		/// 1回の通信で1度しかtrueを返しません
+		/// </summary>
+		[[nodiscard]] bool isDone();
 	};
 
 	/// <summary>
@@ -166,6 +180,7 @@ namespace s3d
 	/// </summary>
 	class HTTPClient
 	{
+
 	public:
 
 		/// <summary>
@@ -191,7 +206,16 @@ namespace s3d
 		/// </param>
 		HTTPResponse downloadFile(URLView url, FilePathView saveFilePath);
 
-		AsyncHTTPTask downloadFileAsync(URLView url, FilePathView saveFilePath);
+		/// <summary>
+		/// 非同期でファイルをダウンロードします
+		/// </summary>
+		/// <param name="url">
+		/// URL
+		/// </param>
+		/// <param name="saveFilePath">
+		/// 取得したファイルの保存先のファイルパス
+		/// </param>
+		[[nodiscard]] AsyncHTTPTask downloadFileAsync(URLView url, FilePathView saveFilePath);
 
 		/// <summary>
 		/// HTTP-GETリクエストを送ります
