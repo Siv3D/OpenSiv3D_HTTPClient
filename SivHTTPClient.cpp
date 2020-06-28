@@ -69,12 +69,12 @@ namespace s3d
 			return;
 		}
 
-		m_statusCode = ParseOr<int32>(splitStr2[1], InvalidStatusCode);
+		m_statusCode = static_cast<HTTPResponseStatusCode>(ParseOr<int32>(splitStr2[1], 0));
 	}
 
 	bool HTTPResponse::isValid() const
 	{
-		return m_statusCode != InvalidStatusCode;
+		return m_statusCode != HTTPResponseStatusCode::Invalid;
 	}
 
 	HTTPResponse::operator bool() const
@@ -87,7 +87,7 @@ namespace s3d
 		return m_header;
 	}
 
-	int32 HTTPResponse::getStatusCode() const
+	HTTPResponseStatusCode HTTPResponse::getStatusCode() const
 	{
 		return m_statusCode;
 	}
@@ -464,4 +464,8 @@ namespace s3d
 		return true;
 	}
 
+	void Formatter(FormatData& formatData, const HTTPResponseStatusCode& value)
+	{
+		formatData.string.append(ToString(static_cast<uint32>(value)));
+	}
 }
