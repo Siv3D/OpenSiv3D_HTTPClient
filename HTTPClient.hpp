@@ -110,6 +110,15 @@ namespace s3d
 
 	};
 
+	enum class HTTPResponseStatusType : uint32 {
+		Invalid = 0,
+		Informational = 1,
+		Successful = 2,
+		Redirection = 3,
+		ClientError = 4,
+		ServerError = 5
+	};
+
 	namespace SimpleHTTP
 	{
 		/// <summary>
@@ -168,6 +177,10 @@ namespace s3d
 		/// 取得したファイルの保存先のファイルパス
 		/// </param>
 		HTTPResponse Post(URLView url, const HTTPHeader& header, const void* src, size_t size, FilePathView saveFilePath);
+	
+		bool IsStatusCodeTypeOf(HTTPResponseStatusCode code, HTTPResponseStatusType type) {
+			return static_cast<uint32>(code) / 100 == static_cast<uint32>(type);
+		}
 	};
 
 	class HTTPResponse
