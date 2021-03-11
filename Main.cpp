@@ -153,7 +153,7 @@ void Main()
 	//
 
 	const URL url = U"https://httpbin.org/post";
-	const HTTPHeader header = 
+	const HTTPHeader header =
 	{
 		{ U"Content-Type", U"application/json" }
 	};

@@ -15,13 +15,15 @@ namespace s3d {
 
 		ConcurrentTask<HTTPResponse> m_task;
 
+		bool m_autoFollowLocation = true;
+
 		HTTPResponse innerDownloadTask();
 
 	public:
 
 		AsyncHTTPTaskImpl() = default;
 
-		AsyncHTTPTaskImpl(URLView url, FilePathView path);
+		AsyncHTTPTaskImpl(URLView url, FilePathView path, bool autoFollowLocation = true);
 
 		~AsyncHTTPTaskImpl();
 

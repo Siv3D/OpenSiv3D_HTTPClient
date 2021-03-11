@@ -1,7 +1,8 @@
-﻿# include "HTTPClient.hpp"
-# include "AsyncHTTPTaskImpl.hpp"
-# define CURL_STATICLIB
-# include <curl/curl.h>
+﻿#include "HTTPClient.hpp"
+#include "AsyncHTTPTaskImpl.hpp"
+#define CURL_STATICLIB
+#include <curl/curl.h>
+#include <utility>
 
 namespace s3d
 {
@@ -63,7 +64,16 @@ namespace s3d
 			return;
 		}
 
-		const Array<String> splitStr2 = splitStr.front().split(' ');
+		int Block = 0, swapBlock = 0;
+
+		for (int i = 0; i < splitStr.size(); i++) {
+			if (splitStr.at(i).size() == 1 && splitStr.at(i) == U"\r") {
+				Block = i;
+				std::swap(Block,swapBlock);
+			}
+		}
+
+		const Array<String> splitStr2 = splitStr.at(Block+1).split(' ');
 		if (splitStr2.size() < 2)
 		{
 			return;
@@ -122,8 +132,8 @@ namespace s3d
 	{
 	}
 
-	AsyncHTTPTask::AsyncHTTPTask(URLView url, FilePathView path)
-		: pImpl(std::make_shared<AsyncHTTPTaskImpl>(url,path))
+	AsyncHTTPTask::AsyncHTTPTask(URLView url, FilePathView path, bool autoFollowLocation)
+		: pImpl(std::make_shared<AsyncHTTPTaskImpl>(url, path, autoFollowLocation))
 	{
 	}
 
@@ -172,7 +182,7 @@ namespace s3d
 		::curl_global_cleanup();
 	}
 
-	HTTPResponse SimpleHTTP::DownloadFile(const URLView url, FilePathView saveFilePath)
+	HTTPResponse SimpleHTTP::DownloadFile(const URLView url, FilePathView saveFilePath, bool autoFollowRocation)
 	{
 
 		BinaryWriter writer(saveFilePath);
@@ -204,6 +214,10 @@ namespace s3d
 			::curl_easy_setopt(curl, ::CURLOPT_HEADERDATA, &headerString);
 		}
 
+		if (autoFollowRocation) {
+			::curl_easy_setopt(curl, ::CURLOPT_FOLLOWLOCATION, 1L);
+		}
+
 		const ::CURLcode result = ::curl_easy_perform(curl);
 		::curl_easy_cleanup(curl);
 
@@ -217,12 +231,12 @@ namespace s3d
 		return HTTPResponse(headerString);
 	}
 
-	AsyncHTTPTask SimpleHTTP::DownloadFileAsync(URLView url, FilePathView saveFilePath)
+	AsyncHTTPTask SimpleHTTP::DownloadFileAsync(URLView url, FilePathView saveFilePath, bool autoFollowRocation)
 	{
-		return AsyncHTTPTask(url, saveFilePath);
+		return AsyncHTTPTask(url, saveFilePath, autoFollowRocation);
 	}
 
-	HTTPResponse SimpleHTTP::Get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath)
+	HTTPResponse SimpleHTTP::Get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath, bool autoFollowRocation)
 	{
 		BinaryWriter writer(saveFilePath);
 		{
@@ -251,19 +265,22 @@ namespace s3d
 
 		::curl_easy_setopt(curl, ::CURLOPT_HTTPHEADER, header_slist);
 
-
 		const std::string urlUTF8 = Unicode::ToUTF8(url);
 		::curl_easy_setopt(curl, ::CURLOPT_URL, urlUTF8.c_str());
 
 		::curl_easy_setopt(curl, ::CURLOPT_WRITEFUNCTION, detail::CallbackWrite);
 		::curl_easy_setopt(curl, ::CURLOPT_WRITEDATA, &writer);
 
-
 		// レスポンスヘッダーの設定
 		String headerString;
 		{
 			::curl_easy_setopt(curl, ::CURLOPT_HEADERFUNCTION, detail::HeaderCallback);
 			::curl_easy_setopt(curl, ::CURLOPT_HEADERDATA, &headerString);
+		}
+
+		if (autoFollowRocation)
+		{
+			::curl_easy_setopt(curl, ::CURLOPT_FOLLOWLOCATION, 1L);
 		}
 
 		const ::CURLcode result = ::curl_easy_perform(curl);
@@ -280,7 +297,7 @@ namespace s3d
 		return HTTPResponse(headerString);
 	}
 
-	HTTPResponse SimpleHTTP::Post(const URLView url, const HTTPHeader& header, const void* src, size_t size, const FilePathView saveFilePath)
+	HTTPResponse SimpleHTTP::Post(const URLView url, const HTTPHeader& header, const void* src, size_t size, const FilePathView saveFilePath, bool autoFollowRocation)
 	{
 		BinaryWriter writer(saveFilePath);
 		{
@@ -330,6 +347,10 @@ namespace s3d
 			::curl_easy_setopt(curl, ::CURLOPT_HEADERDATA, &headerString);
 		}
 
+		if (autoFollowRocation) {
+			::curl_easy_setopt(curl, ::CURLOPT_FOLLOWLOCATION, 1L);
+		}
+
 		const ::CURLcode result = ::curl_easy_perform(curl);
 		::curl_easy_cleanup(curl);
 		::curl_slist_free_all(header_slist);
@@ -343,7 +364,6 @@ namespace s3d
 
 		return HTTPResponse(headerString);
 	}
-
 
 	//AsyncHTTPTaskImpl.hpp
 
@@ -385,6 +405,10 @@ namespace s3d
 			::curl_easy_setopt(curl, ::CURLOPT_HEADERDATA, &headerString);
 		}
 
+		if (m_autoFollowLocation) {
+			::curl_easy_setopt(curl, ::CURLOPT_FOLLOWLOCATION, 1L);
+		}
+
 		const ::CURLcode result = ::curl_easy_perform(curl);
 		::curl_easy_cleanup(curl);
 
@@ -408,11 +432,12 @@ namespace s3d
 		return HTTPResponse(headerString);
 	}
 
-	AsyncHTTPTask::AsyncHTTPTaskImpl::AsyncHTTPTaskImpl(URLView url, FilePathView path)
+	AsyncHTTPTask::AsyncHTTPTaskImpl::AsyncHTTPTaskImpl(URLView url, FilePathView path, bool autoFollowLocation)
 		: m_progressValue(url)
 		, m_response()
 		, m_writer(path)
 		, m_task()
+		, m_autoFollowLocation(autoFollowLocation)
 	{
 		m_task = CreateConcurrentTask(&AsyncHTTPTask::AsyncHTTPTaskImpl::innerDownloadTask, this);
 	}

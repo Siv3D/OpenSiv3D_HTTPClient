@@ -140,9 +140,9 @@ namespace s3d
 		/// <param name="saveFilePath">
 		/// 取得したファイルの保存先のファイルパス
 		/// </param>
-		HTTPResponse DownloadFile(URLView url, FilePathView saveFilePath);
+		HTTPResponse DownloadFile(URLView url, FilePathView saveFilePath, bool autoFollowLocation = true);
 
-		[[nodiscard]] AsyncHTTPTask DownloadFileAsync(URLView url, FilePathView saveFilePath);
+		[[nodiscard]] AsyncHTTPTask DownloadFileAsync(URLView url, FilePathView saveFilePath, bool autoFollowLocation = true);
 
 		/// <summary>
 		/// HTTP-GETリクエストを送ります
@@ -156,7 +156,7 @@ namespace s3d
 		/// <param name="saveFilePath">
 		/// 取得したファイルの保存先のファイルパス
 		/// </param>
-		HTTPResponse Get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath);
+		HTTPResponse Get(const URLView url, const HTTPHeader& header, const FilePathView saveFilePath, bool autoFollowLocation = true);
 
 		/// <summary>
 		/// HTTP-POSTリクエストを送ります
@@ -176,9 +176,9 @@ namespace s3d
 		/// <param name="saveFilePath">
 		/// 取得したファイルの保存先のファイルパス
 		/// </param>
-		HTTPResponse Post(URLView url, const HTTPHeader& header, const void* src, size_t size, FilePathView saveFilePath);
+		HTTPResponse Post(URLView url, const HTTPHeader& header, const void* src, size_t size, FilePathView saveFilePath, bool autoFollowLocation = true);
 	
-		bool IsStatusCodeTypeOf(HTTPResponseStatusCode code, HTTPResponseStatusType type) {
+		inline bool IsStatusCodeTypeOf(HTTPResponseStatusCode code, HTTPResponseStatusType type) {
 			return static_cast<uint32>(code) / 100 == static_cast<uint32>(type);
 		}
 	};
@@ -271,13 +271,13 @@ namespace s3d
 	{
 	private:
 
-		friend AsyncHTTPTask SimpleHTTP::DownloadFileAsync(URLView url, FilePathView saveFilePath);
+		friend AsyncHTTPTask SimpleHTTP::DownloadFileAsync(URLView url, FilePathView saveFilePath, bool autoFollowLocation);
 
 		class AsyncHTTPTaskImpl;
 
 		std::shared_ptr<AsyncHTTPTaskImpl> pImpl;
 
-		explicit AsyncHTTPTask(URLView url, FilePathView path);
+		explicit AsyncHTTPTask(URLView url, FilePathView path, bool autoFollowLocation = true);
 
 	public:
 
